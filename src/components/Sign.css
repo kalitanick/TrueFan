@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css?family=Warnes&display=swap');
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  display: table;
+  background-color: black;
+}
+
+@font-face {
+   
+  font-family: neon;
+  src: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/707108/neon.ttf);
+  /*  Different Neon font that I didn't love 
+  font-family: 'Warnes', cursive; */
+}
+
+:root {
+    --dark-green: #1db954;
+    --light-green: #1ed760;
+    --light-white: #ffffff;
+    --dark-white: #e9dddd;
+}
+
+.neon-container {
+  text-align: center;
+  vertical-align: middle;
+  padding-top: 2.5%;
+}
+
+.neon {
+  font-family: neon;
+  color: var(--light-green);
+  font-size: 100pt;
+  line-height: 100pt;
+  text-shadow: 0 0 3vw var(--light-green);
+}
+
+.flux {
+  font-family: neon;
+  color: var(--light-green);
+  font-size: 100pt;
+  line-height: 100pt;
+  text-shadow: 0 0 3vw var(--light-green);
+}
+
+.neon {
+  animation: neon 10s ease infinite;
+  -moz-animation: neon 10s ease infinite;
+  -webkit-animation: neon 10s ease infinite;
+}
+
+.sign-footer {
+    animation: flux 10s ease infinite;
+    -moz-animation: flux 10s ease infinite;
+    -webkit-animation: flux 10s ease infinite;
+    -o-animation: flux 10s ease infinite;
+    font-family: neon;
+    font-size: 18.5pt;
+    padding-top: 14px;
+    color: var(--light-green)
+}
+
+@keyframes neon {
+  0%,
+  100% {
+    text-shadow: 0 0 1px var(--light-white), 0 0 3px var(--light-white), 0 0 10px var(--light-white), 0 0 10px var(--light-white), 0 0 .4px rgb(126, 254, 40), .5px .5px .1px var(#a0ff8d);
+    color: var(--light-white);
+  }
+  50% {
+    text-shadow: 0 0 .5px var(--dark-white), 0 0 1.5px var(--dark-white), 0 0 5px var(--dark-white), 0 0 5px var(--dark-white), 0 0 .2px var(--dark-white), .5px .5px .1px rgb(32, 26, 2);
+    color: var(--dark-white);
+  }
+}
+
+.flux {
+  animation: neon 10s ease infinite;
+  -moz-animation: flux 10s ease infinite;
+  -webkit-animation: flux 10s ease infinite;
+  -o-animation: flux 10s ease infinite;
+}
+
+@keyframes flux {
+    0%,
+    100% {
+        text-shadow: 0 0 1px var(--light-white), 0 0 3px var(--light-white), 0 0 10px var(--light-white), 0 0 10px var(--light-white), 0 0 .4px rgb(126, 254, 40), .5px .5px .1px var(#a0ff8d);
+        color: var(--light-white);
+    }
+    50% {
+        text-shadow: 0 0 .5px var(--dark-white), 0 0 1.5px var(--dark-white), 0 0 5px var(--dark-white), 0 0 5px var(--dark-white), 0 0 .2px var(--dark-white), .5px .5px .1px rgb(32, 26, 2);
+        color: var(--dark-white);
+    }
+}
+  
