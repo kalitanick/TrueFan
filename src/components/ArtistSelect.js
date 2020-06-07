@@ -1,8 +1,7 @@
-import React, { Component, useState } from "react";
-import { render } from 'react-dom'
-import { useSpring, animated, useTrail } from "react-spring";
+import React, { Component } from "react";
+import { useSpring, animated } from "react-spring";
 
-import { getArtistLeastPopularTracks } from "../utils/SpotifyCalls"
+import { getArtistLeastPopularTracks, createLeastPopularPlaylist } from "../utils/SpotifyCalls"
 import TrackHolder from './TrackHolder.js'
 import ArtistIcon from './ArtistIcon.js'
 import Sign from './Sign.js'
@@ -52,12 +51,16 @@ class ArtistSelect extends Component {
                     else {
                         this.setState({
                             artist_name: result.artistName,
-                            least_popular_tracks: result.tracks.splice(1, 10),//Starting at 1
+                            least_popular_tracks: result.tracks.splice(0, 10),//Starting at 1
                             least_popular_song: result.tracks[0],
                             artist_id: result.artistId,
                             artist_image: result.artistImage,
                             has_searched: true
                         });
+                        //TODO: Add UI for usre to select this
+                        // createLeastPopularPlaylist(this.state.token, result.artistName, this.state.least_popular_tracks).then((result) => {
+                        //     console.log(result);
+                        // })
                     }
                 })
         }
@@ -66,6 +69,7 @@ class ArtistSelect extends Component {
                 has_searched: true
             });
         }
+
     }
 
     //User hit submit on artist search
@@ -117,8 +121,8 @@ class ArtistSelect extends Component {
                         <div className="search"></div>
                     </div>
 
-                         <div className="filters">
-                         {/* Temporarily Removing Filters
+                    <div className="filters">
+                        {/* TODO: Reimplement filters
                          <SearchFilters />
                          <FilterCheckbox
                              filterLabel="Filter out Live Songs"
@@ -131,7 +135,7 @@ class ArtistSelect extends Component {
                              filter="filter_short"
                              checked={this.state.filter_short} />
                          */}
-                     </div>
+                    </div>
                 </form>
 
                 {this.state.has_searched && this.state.artist_search !== "" && this.state.artist_name === "" && (
@@ -148,7 +152,7 @@ class ArtistSelect extends Component {
                                 trackObject={this.state.least_popular_song}
                                 isLarge={true} />
                         </div>
-                        <TrackHolder tracks={this.state.least_popular_tracks} />
+                        <TrackHolder tracks={this.state.least_popular_tracks.slice(1)} />
                     </div>
                 )}
             </div>
@@ -178,7 +182,7 @@ function ErrorMessage(props) {
         </animated.div>
     )
 }
-//Temporarily removed
+//TODO: Reimplement filters
 function SearchFilters() {
     const [props, set] = useSpring(() => ({ from: { opacity: 0 }, opacity: 1, config: { mass: 5, tension: 350, friction: 40 } }))
     return (
@@ -189,7 +193,7 @@ function SearchFilters() {
         </div >
     )
 }
-//Temporarily removed
+//TODO: Reimplement filters
 class FilterCheckbox extends Component {
     render() {
         return (

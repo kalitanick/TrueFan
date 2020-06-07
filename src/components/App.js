@@ -38,9 +38,7 @@ class App extends Component {
                       "%20"
                     )}&response_type=token&show_dialog=true`}
                   >
-                    <button className="spotify-button">
-                      Rediscover Your Artists
-                  </button>
+                    <DisoverArtistButton/>
                   </a>
                 </div>
               </div>
@@ -55,6 +53,18 @@ class App extends Component {
       </div>
     );
   }
+}
+
+function DisoverArtistButton(props){
+  let buttonText = "Discover your Artist"
+  return (
+    <div>
+      <button className="spotify-button">
+        {buttonText}
+      </button>
+    </div>
+  )
+
 }
 
 export default App;
