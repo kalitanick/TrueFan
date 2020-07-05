@@ -1,13 +1,16 @@
 $spotifyGreen: #1ED760;
-.artist-title{
-    padding-bottom: 20px;
-}
-.ArtistIcon{
+
+.artist-icon{
     padding-bottom: 15px;
 }
+
 .spotify-button {
     background: $spotifyGreen; 
     color: white;
     border: 1px solid $spotifyGreen;
     transition: all .5s;
+}
+
+.artist-picture-track {
+    padding-top: 20px;
 }

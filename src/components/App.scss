@@ -7,19 +7,21 @@ button {
     letter-spacing: 1px;
     font-size: 28px;
     outline: none;
-    margin-top: 30px;
+    margin-top: 10px;
     &:hover {
       cursor: pointer;
     }
 }
 
 .spotify-button {
-    background: $spotifyGreen; 
+    background: darken($spotifyGreen, 8%); 
     color: white;
-    border: 1px solid $spotifyGreen;
+    border: 1px solid darken($spotifyGreen, 8%);
     transition: all .5s;
     &:hover {
-        background: lighten( $spotifyGreen, 15% );
+        background: $spotifyGreen;
+        border: 1px solid $spotifyGreen;
+        color: white
     }
 }
 
@@ -29,6 +31,8 @@ button {
 
 .App {
     text-align: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
   }
   
   .App-logo {

@@ -1,51 +1,57 @@
-//Helper class to call spotify API's
 export var token;
 export var baseUrl = "https://api.spotify.com/v1";
 export var proxyUrl = "https://cors-anywhere.herokuapp.com/";
-var songLengthThreshold = 30000; //30 seconds
+//Thresholds used for filtering tracks 
+var trackLengthThreshold = 30000; //In milliseconds
 var upperLivenessThreshold = .8;
 var lowerLivenessThreshold = .2;
+var speechinessThreshold = .4; //Currently working well
 export function setToken(newToken) {
     token = newToken;
 }
-
 var searchedArtist = "";
+//Helper class to call spotify API's
 //Main function which takes in the artist name and token and returns array of tracks from least to most popular
 //artistName String to search for
 //token spotify api token
-//filterLive boolean to filter out live songs from the result
-//filterShort boolean to filter out short songs from the result
-export async function getArtistLeastPopularTracks(artistName, token, filterLive, filterShort) {
+//filters for feautes of tracks
+export async function getArtistLeastPopularTracks(artistName, token, filterLive, filterShort, filterCommentary) {
     setToken(token);
     //Adding object which we add the properties to. Needs more thought if this is the best approach
     let searchResult = {};
     let searchArtistResponse = await searchArtist(artistName);
     //Search returned no artists
     if (searchArtistResponse.items.length === 0) return 0;
+    
     searchResult.artistName = searchArtistResponse.items[0].name;
     searchResult.artistId = searchArtistResponse.items[0].id;
     searchResult.artistImage = searchArtistResponse.items[0].images[0].url; //Images has 3 images with different resolutions
+    
     let albumIds = await getArtistAlbums(searchResult.artistId);
     let trackIds = await getManyAlbumsTracks(albumIds);
+
     //Contains track info but missing liveness attribute
     let basicTracksResult = await getAllTrackInfo(trackIds);
     //Contains all relevant track information
     let tracks = await getAllTrackAudioFeatures(basicTracksResult);
     //Filter tracks out depending on filters set
-    tracks = filterSongs(tracks, filterLive, filterShort);
+    tracks = filterTracks(tracks, filterLive, filterShort, filterCommentary);
     //Sort the tracks from least to most popular
     tracks.sort((t1, t2) => (t1.popularity > t2.popularity) ? 1 : -1);
+    // console.log(tracks)
     searchResult.tracks = tracks;
     return searchResult;
 }
 
-export async function createLeastPopularPlaylist(token, artistName, tracks) {
+export async function createLeastPopularPlaylist(token, artistName, tracks, playlistName, isPublic) {
     setToken(token);
     let userInfo = await getUserInformation();
     let userId = userInfo.id;
-    //Need to both create a playlist and then add the songs to it
-    let createPlaylistResponse = await createPlaylist(userId, artistName);
+    //Need to both create a playlist and then add the tracks to it
+    let createPlaylistResponse = await createPlaylist(userId, artistName, playlistName, isPublic);
+    console.log(createPlaylistResponse);
     let addTracksToPlayListResponse = await addTracksToPlaylist(createPlaylistResponse.id, tracks);
+    console.log(addTracksToPlayListResponse);
     return userId;
 }
 
@@ -67,7 +73,8 @@ function searchArtist(artistName) {
 
 //Given an artistId returns array of album objects
 function getArtistAlbums(artistId) {
-    return callSpotifyAPI("/artists/" + artistId + "/albums")
+    let options = { market: "US" }
+    return callSpotifyAPI("/artists/" + artistId + "/albums", options)
         .then((res) => {
             return res.items.map((album) => album.id);
         });
@@ -150,10 +157,12 @@ export function callSpotifyAPI(endpoint, options, noCors) {
 ///////////////////////
 //Spotify POST methods/
 ///////////////////////
-function createPlaylist(userId, artistName) {
+
+//Creates a playlist in the user's account
+function createPlaylist(userId, artistName, playlistName, isPublic) {
     artistName = ((artistName.charAt(artistName.length - 1) === 's') ? artistName + "'" : artistName + "'s");
-    let playlistName = artistName + " least popular tracks";
-    let isPublic = false;
+    // let playlistName = artistName + " least popular tracks";
+    // let isPublic = false;
     let isCollaborative = false;
     let playlistDescription = "Playlist created automatically by TrueFanPlaylist.com";
     let bodyParams = { name: playlistName, public: isPublic, collaborative: isCollaborative, description: playlistDescription };
@@ -163,12 +172,12 @@ function createPlaylist(userId, artistName) {
         });
 }
 
+//Adds tracks to a user's playlist=
 function addTracksToPlaylist(playlistId, tracks) {
-    //Array of elements like: "spotify:track:<URI>",
     let spotifyTrackURIs = tracks.map((track) => {
         return "spotify:track:" + track.id;
     });
-    let bodyParams = { uris: spotifyTrackURIs};
+    let bodyParams = { uris: spotifyTrackURIs };
     return postSpotifyAPI("/playlists/" + playlistId + "/tracks", bodyParams)
         .then((res) => {
             return res;
@@ -213,57 +222,72 @@ function extractTracksFromAllAlbums(albums) {
     albums.forEach(album => {
         let trackObjects = album.tracks.items;
         if (album.artists[0].name === "Various Artists") {
-            trackObjects = filterVariousArtistSongs(searchedArtist, trackObjects)
+            trackObjects = filterVariousArtistTracks(searchedArtist, trackObjects)
         }
         trackIds.push.apply(trackIds, extractTracksFromOneAlbum(trackObjects));
     })
     return trackIds;
 }
 
-//Artists may appear on records but not on all songs. This will be called on tracks by 'various artists' albums to filter out any
+//Artists may appear on records but not on all tracks. This will be called on tracks by 'various artists' albums to filter out any
 //tracks that are not by the given artist
-function filterVariousArtistSongs(artistName, tracks) {
+function filterVariousArtistTracks(artistName, tracks) {
     return tracks.filter((track) => {
         return track.artists[0].name === artistName;
     })
 }
 
 //Takes in the filter settings and runs the appropriate filter functions
-function filterSongs(tracks, filterLive, filterShort) {
+function filterTracks(tracks, filterLive, filterShort, filterCommentary) {
     if (filterLive) {
-        tracks = filterLiveSongs(tracks);
+        tracks = filterLiveTracks(tracks);
     }
     if (filterShort) {
-        tracks = filterShortSongs(tracks);
+        tracks = filterShortTracks(tracks);
+    }
+    if(filterCommentary) {
+        tracks = filterCommentaryTracks(tracks);
     }
     return tracks;
 }
 
-//Most short songs are interludes or transitions which isn't an interesting result
-function filterShortSongs(tracks) {
+//Most short tracks are interludes or transitions which isn't an interesting result
+function filterShortTracks(tracks) {
     return tracks.filter((track) => {
-        return track.duration_ms > songLengthThreshold;
+        return track.duration_ms > trackLengthThreshold;
     })
 }
 
-//Filters out songs for the following criteria
+//Filters out tracks for the following criteria
 //If liveness is greater than the upper threshold
 //If liveness is greater than the lower threshold AND has live keywords
-function filterLiveSongs(tracks) {
+function filterLiveTracks(tracks) {
     return tracks.filter((track) => {
-        let songLive = false;
+        let trackLive = false;
         if (track.liveness > upperLivenessThreshold) {
-            songLive = true;
-            //console.log(track.name + " song was removed for being above the higher threshold: " + upperLivenessThreshold);
+            trackLive = true;
+            //console.log(track.name + " track was removed for being above the higher threshold: " + upperLivenessThreshold);
         }
         else if (track.liveness > lowerLivenessThreshold) {
-            songLive = doesContainLiveKeywords(track.name.toLowerCase());
-            if (songLive) {
-                //console.log(track.name + " song was removed for being above the lower threshold and having the word live in the titel " + upperLivenessThreshold);
+            trackLive = doesContainLiveKeywords(track.name.toLowerCase());
+            if (trackLive) {
+                //console.log(track.name + " track was removed for being above the lower threshold and having the word live in the titel " + upperLivenessThreshold);
             }
         }
-        return !songLive;
+        return !trackLive;
     });
+}
+
+//If speechiness is greater than the threshold remove it
+function filterCommentaryTracks(tracks) {
+    return tracks.filter((track) => {
+        let trackCommentary = false;
+        if (track.speechiness > speechinessThreshold) {
+            //console.log(track.name + " track was removed for being above the speechiness threshold: " + speechinessThreshold);
+            trackCommentary = true;
+        }
+        return !trackCommentary;
+    })
 }
 
 //Returns true if the given track name contains any live keywords
@@ -284,6 +308,7 @@ function doesContainLiveKeywords(trackName) {
 function combineTrackInfromation(tracks, trackFeatures) {
     for (var i = 0; i < tracks.length; i++) {
         tracks[i].liveness = trackFeatures[i].liveness
+        tracks[i].speechiness = trackFeatures[i].speechiness
     }
     return tracks;
 }
@@ -299,4 +324,9 @@ function splitArray(inputArray, chunkSize) {
         numChunks++;
     }
     return nestedArray;
+}
+
+//Returns the possesive of the Artist Name handling 's'
+export function artistPossesiveName(artistName) {
+    return ((artistName.charAt(artistName.length - 1) === 's') ? artistName + "'" : artistName + "'s");
 }

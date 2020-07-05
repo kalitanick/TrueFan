@@ -1,13 +1,11 @@
 import React, { Component } from "react";
 import { useSpring, animated } from "react-spring";
-
 import { getArtistLeastPopularTracks, createLeastPopularPlaylist } from "../utils/SpotifyCalls"
 import TrackHolder from './TrackHolder.js'
 import ArtistIcon from './ArtistIcon.js'
 import Sign from './Sign.js'
-
 import FilterIcon from '../FilterIcon.png'
-
+import PlaylistCreatorUI from "./PlaylistCreatorUI.js"
 import "./ArtistSelect.scss"
 
 class ArtistSelect extends Component {
@@ -16,6 +14,7 @@ class ArtistSelect extends Component {
         this.state = {
             filter_live: true,
             filter_short: true,
+            filter_commentary: true,
             has_searched: false, //Has the user searched
             token: props.token, //Token for spotify calls
             artist_search: "", //String of the search when the user clicks submit
@@ -24,13 +23,15 @@ class ArtistSelect extends Component {
             artist_name: "",
             artist_image: "",
             artist_id: "",
-            least_popular_song: null,
-            least_popular_tracks: null
+            least_popular_tracks: null,
+            creating_playlist: false
         }
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.updateArtistSearchState = this.updateArtistSearchState.bind(this);
         this.searchForArtist = this.searchForArtist.bind(this);
+        this.togglePlaylistCreator = this.togglePlaylistCreator.bind(this);
+        this.createPlaylist = this.createPlaylist.bind(this);
     };
     updateArtistSearchState(artistSearch) {
         this.setState((state) => {
@@ -43,24 +44,21 @@ class ArtistSelect extends Component {
             getArtistLeastPopularTracks(this.state.artist_search,
                 this.state.token,
                 this.state.filter_live,
-                this.state.filter_short)
+                this.state.filter_short,
+                this.state.filter_commentary)
                 .then((result) => {
+                    //Search had no result
                     if (result === 0) {
                         this.setState({ has_searched: true })
                     }
                     else {
                         this.setState({
                             artist_name: result.artistName,
-                            least_popular_tracks: result.tracks.splice(0, 10),//Starting at 1
-                            least_popular_song: result.tracks[0],
+                            least_popular_tracks: result.tracks.slice(0, 10),
                             artist_id: result.artistId,
                             artist_image: result.artistImage,
                             has_searched: true
                         });
-                        //TODO: Add UI for usre to select this
-                        // createLeastPopularPlaylist(this.state.token, result.artistName, this.state.least_popular_tracks).then((result) => {
-                        //     console.log(result);
-                        // })
                     }
                 })
         }
@@ -69,19 +67,35 @@ class ArtistSelect extends Component {
                 has_searched: true
             });
         }
+    }
 
+    //When the user selects 'Create Playlist'
+    //Have this bring up a form for the user to fill out
+    togglePlaylistCreator() {
+        console.log("Bringing up playlist form")
+        this.setState({
+            creating_playlist: !this.state.creating_playlist
+        });
+    }
+
+    createPlaylist(playlistName, isPublic) {
+        createLeastPopularPlaylist(
+            this.state.token, 
+            this.state.artist_name, 
+            this.state.least_popular_tracks, 
+            playlistName, 
+            isPublic);
+        this.togglePlaylistCreator();
     }
 
     //User hit submit on artist search
     async handleSubmit(event) {
         //Prevents webpage from reloading on submit
         event.preventDefault();
-        //Swithching to use a call back since setState is asynchronous
         let searchText = this.state.search_text;
         this.setState({
             //Reset Current artist state to reload component animations upon subsequent searches
             artistName: null,
-            least_popular_song: null,
             least_popular_tracks: null,
             artist_id: null,
             artist_image: null,
@@ -100,7 +114,7 @@ class ArtistSelect extends Component {
             value = target.value
         }
         else {
-            //Change was from a filter
+            //Change was from a filter, temporarily disabled
             value = target.checked
         }
         this.setState({ [name]: value })
@@ -108,7 +122,7 @@ class ArtistSelect extends Component {
 
     render() {
         return (
-            <div className="ArtistSelect">
+            <div className="ArtistSelect" style={{backgroundColor:this.state.creating_playlist ? 'rgba(0, 0, 0, .4)' : null }}>
                 <Sign />
                 <form onSubmit={this.handleSubmit} autoComplete="off">
                     <div className="search-container">
@@ -137,6 +151,10 @@ class ArtistSelect extends Component {
                          */}
                     </div>
                 </form>
+                {this.state.creating_playlist ? <PlaylistCreatorUI
+                createPlaylist = {this.createPlaylist}
+                artistName={this.state.artist_name} 
+                togglePlaylistCreator={this.togglePlaylistCreator}/> : null}
 
                 {this.state.has_searched && this.state.artist_search !== "" && this.state.artist_name === "" && (
                     <ErrorMessage errorMessage="Spotify couldn't find an artist with that name" />
@@ -149,8 +167,9 @@ class ArtistSelect extends Component {
                         <div>
                             <ArtistIcon artistName={this.state.artist_name}
                                 image={this.state.artist_image}
-                                trackObject={this.state.least_popular_song}
-                                isLarge={true} />
+                                trackObject={this.state.least_popular_tracks[0]}
+                                isLarge={true}
+                                togglePlaylistCreator={this.togglePlaylistCreator} />
                         </div>
                         <TrackHolder tracks={this.state.least_popular_tracks.slice(1)} />
                     </div>
