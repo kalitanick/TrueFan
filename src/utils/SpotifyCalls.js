@@ -23,6 +23,7 @@ export async function getArtistLeastPopularTracks(artistName, token, filterLive,
     //Search returned no artists
     if (searchArtistResponse.items.length === 0) return 0;
     
+    searchedArtist = searchArtistResponse.items[0].name;
     searchResult.artistName = searchArtistResponse.items[0].name;
     searchResult.artistId = searchArtistResponse.items[0].id;
     searchResult.artistImage = searchArtistResponse.items[0].images[0].url; //Images has 3 images with different resolutions
@@ -119,7 +120,7 @@ async function getAllTrackAudioFeatures(tracks) {
     let trackAudioFeatures = await Promise.all(trackAudioFeatureRequests);
     //Flatten our search results into one array
     let trackFlatAudioFeatures = [].concat(...trackAudioFeatures);
-    return combineTrackInfromation(tracks, trackFlatAudioFeatures);
+    return combineTrackInformation(tracks, trackFlatAudioFeatures);
 }
 
 //Given an array of track objects returns object of detailed track info. Limit 100
@@ -221,7 +222,7 @@ function extractTracksFromAllAlbums(albums) {
     var trackIds = [];
     albums.forEach(album => {
         let trackObjects = album.tracks.items;
-        if (album.artists[0].name === "Various Artists") {
+        if (album.artists[0].name === "Various Artists" || album.artists[0].name !== searchedArtist) {
             trackObjects = filterVariousArtistTracks(searchedArtist, trackObjects)
         }
         trackIds.push.apply(trackIds, extractTracksFromOneAlbum(trackObjects));
@@ -229,8 +230,8 @@ function extractTracksFromAllAlbums(albums) {
     return trackIds;
 }
 
-//Artists may appear on records but not on all tracks. This will be called on tracks by 'various artists' albums to filter out any
-//tracks that are not by the given artist
+//Artists may appear on records but not on all tracks. This will be called on tracks by 'various artists' or by other artists'
+//albums to filter out any tracks that are not by the given artist
 function filterVariousArtistTracks(artistName, tracks) {
     return tracks.filter((track) => {
         return track.artists[0].name === artistName;
@@ -305,10 +306,17 @@ function doesContainLiveKeywords(trackName) {
 
 //We need both the infromation from /gettracks and /getTrackfeatures in one array. 
 //This function takes in both arrays and return an array with the necessary information
-function combineTrackInfromation(tracks, trackFeatures) {
+function combineTrackInformation(tracks, trackFeatures) {
     for (var i = 0; i < tracks.length; i++) {
-        tracks[i].liveness = trackFeatures[i].liveness
-        tracks[i].speechiness = trackFeatures[i].speechiness
+        //Some tracks in spotify don't provide audio features, if it doesn't set to zero so they aren't filtered later 
+        if(trackFeatures[i] == null) {
+            tracks[i].liveness = 0
+            tracks[i].speechiness = 0
+        }
+        else {
+            tracks[i].liveness = trackFeatures[i].liveness
+            tracks[i].speechiness = trackFeatures[i].speechiness
+        }
     }
     return tracks;
 }

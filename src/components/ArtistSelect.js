@@ -1,5 +1,8 @@
 import React, { Component } from "react";
 import { useSpring, animated } from "react-spring";
+import { withStyles } from '@material-ui/core/styles';
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import { getArtistLeastPopularTracks, createLeastPopularPlaylist } from "../utils/SpotifyCalls"
 import TrackHolder from './TrackHolder.js'
 import ArtistIcon from './ArtistIcon.js'
@@ -72,7 +75,6 @@ class ArtistSelect extends Component {
     //When the user selects 'Create Playlist'
     //Have this bring up a form for the user to fill out
     togglePlaylistCreator() {
-        console.log("Bringing up playlist form")
         this.setState({
             creating_playlist: !this.state.creating_playlist
         });
@@ -80,10 +82,10 @@ class ArtistSelect extends Component {
 
     createPlaylist(playlistName, isPublic) {
         createLeastPopularPlaylist(
-            this.state.token, 
-            this.state.artist_name, 
-            this.state.least_popular_tracks, 
-            playlistName, 
+            this.state.token,
+            this.state.artist_name,
+            this.state.least_popular_tracks,
+            playlistName,
             isPublic);
         this.togglePlaylistCreator();
     }
@@ -114,7 +116,7 @@ class ArtistSelect extends Component {
             value = target.value
         }
         else {
-            //Change was from a filter, temporarily disabled
+            //Change was from a filter
             value = target.checked
         }
         this.setState({ [name]: value })
@@ -122,7 +124,7 @@ class ArtistSelect extends Component {
 
     render() {
         return (
-            <div className="ArtistSelect" style={{backgroundColor:this.state.creating_playlist ? 'rgba(0, 0, 0, .4)' : null }}>
+            <div className="ArtistSelect" style={{ backgroundColor: this.state.creating_playlist ? 'rgba(0, 0, 0, .4)' : null }}>
                 <Sign />
                 <form onSubmit={this.handleSubmit} autoComplete="off">
                     <div className="search-container">
@@ -136,25 +138,26 @@ class ArtistSelect extends Component {
                     </div>
 
                     <div className="filters">
-                        {/* TODO: Reimplement filters
-                         <SearchFilters />
-                         <FilterCheckbox
-                             filterLabel="Filter out Live Songs"
-                             handleChange={this.handleChange}
-                             filter="filter_live"
-                             checked={this.state.filter_live} />
-                         <FilterCheckbox
-                             filterLabel="Filter out Short Songs"
-                             handleChange={this.handleChange}
-                             filter="filter_short"
-                             checked={this.state.filter_short} />
-                         */}
+                        <FormControlLabel
+                            className="live_filter"
+                            name="filter_live"
+                            label="Filter Live Tracks"
+                            labelPlacement="bottom"
+                            control={<GreenCheckbox height="10%" checked={this.state.filter_live} onChange={this.handleChange} />}
+                        />
+                        <FormControlLabel
+                            className="commentary_filter"
+                            name="filter_commentary"
+                            label="Filter Commentary Tracks"
+                            labelPlacement="bottom"
+                            control={<GreenCheckbox height="10%" checked={this.state.filter_commentary} onChange={this.handleChange} />}
+                        />
                     </div>
                 </form>
                 {this.state.creating_playlist ? <PlaylistCreatorUI
-                createPlaylist = {this.createPlaylist}
-                artistName={this.state.artist_name} 
-                togglePlaylistCreator={this.togglePlaylistCreator}/> : null}
+                    createPlaylist={this.createPlaylist}
+                    artistName={this.state.artist_name}
+                    togglePlaylistCreator={this.togglePlaylistCreator} /> : null}
 
                 {this.state.has_searched && this.state.artist_search !== "" && this.state.artist_name === "" && (
                     <ErrorMessage errorMessage="Spotify couldn't find an artist with that name" />
@@ -201,6 +204,8 @@ function ErrorMessage(props) {
         </animated.div>
     )
 }
+
+
 //TODO: Reimplement filters
 function SearchFilters() {
     const [props, set] = useSpring(() => ({ from: { opacity: 0 }, opacity: 1, config: { mass: 5, tension: 350, friction: 40 } }))
@@ -227,5 +232,16 @@ class FilterCheckbox extends Component {
         )
     }
 }
+
+
+const GreenCheckbox = withStyles({
+    root: {
+        color: '#1ED760',
+        '&$checked': {
+            color: '#1ED760'
+        },
+    },
+    checked: {},
+})((props) => <Checkbox color="default" {...props} />);
 
 export default ArtistSelect;

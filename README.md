@@ -2,7 +2,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## About this Project
 
-This is a react site which allows the user to search an artist's least popular tracks on spotify to become a 'true fan'. It is hosted at https://truefanplaylist.com/ though the most recent changes here may not be live yet.
+This is a react site which allows the user to search an artist's least popular tracks on spotify to achieve the status of a '***true fan***'. It is hosted at https://truefanplaylist.com/.
 
 It uses [Spotify's Web API](https://developer.spotify.com/documentation/web-api/) and requires the user to authenticate their account through spotify. 
 
@@ -11,8 +11,7 @@ In order to run the project you will need a spotify developer account and fill i
 There are still a handful of features and optimizations that need to be added:
 
 * General code cleanup
-* Adding More Animation for feedback to forms
-* Adding checkboxes to allows user the option to filter in/out live and short songs, it currently does so by default
+* Adding More Animation for feedback across site
 * Handling of region availability of albums and tracks, it currently defualts to US
 
 ## Available Scripts

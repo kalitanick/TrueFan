@@ -59,7 +59,7 @@ body {
     background: #1db954;
     border-radius: 50%;
     transition: all 1s;
-    z-index: 4;
+    z-index: 1;
     box-shadow: 0 0 25px 0 rgba(0, 0, 0, 0.4);
     &:hover {
       cursor: pointer;
@@ -112,7 +112,7 @@ body {
     box-shadow: 0 0 25px 0 #1db954, 0 20px 25px 0 rgba(0, 0, 0, 0.2);
     transition: all 1s;
     opacity: 0;
-    z-index: 5;
+    z-index: 2;
     font-weight: bolder;
     letter-spacing: 0.1em;
     &:hover {
@@ -126,7 +126,7 @@ body {
     &:focus ~ .search {
       right: -250px;
       background: #151515;
-      z-index: 6;
+      z-index: 3;
       &::before {
         top: 0;
         left: 0;

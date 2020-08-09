@@ -25,7 +25,7 @@ function ArtistTitle(props) {
 
 function ArtistPictureAndTrack(props) {
     return (
-        <div class="artist-picture-track" style={{ display: 'flex', justifyContent: 'center' }}>
+        <div className="artist-picture-track" style={{ display: 'flex', justifyContent: 'center' }}>
             <img src={props.image} alt="ArtistPicture" width="360" height="380" />
             <TrackPlayer trackObject={props.trackObject} isLarge={props.isLarge} />
         </div>
