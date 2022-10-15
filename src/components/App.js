@@ -11,6 +11,7 @@ class App extends Component {
     this.state = {
       token: null
     };
+    console.log(process.env);
   }
   componentDidMount() {
     // Set token
